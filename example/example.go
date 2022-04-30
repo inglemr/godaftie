@@ -1,7 +1,7 @@
 package main
 
 import (
-	"daft/daft"
+	"github.com/inglemr/godaftie/daft"
 
 	"github.com/davecgh/go-spew/spew"
 )
