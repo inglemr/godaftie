@@ -11,10 +11,13 @@ func main() {
 	dafClient.Init()
 	listReq := daft.ListingsRequest{
 		Paging: daft.PagingFilter{
-			PageSize: 100,
+			PageSize: 50,
 		},
 	}
 	listings := dafClient.GetListings(listReq)
 	spew.Dump(listings.Paging)
-	spew.Dump(listings.Listings[0])
+	spew.Dump(listings.Listings[0].Listing)
+	spew.Dump(listings.Listings[0].Listing.GetPriceAndCadence())
+	spew.Dump(listings.Listings[0].Listing.GetBathCount())
+	spew.Dump(listings.Listings[0].Listing.GetBedCount())
 }

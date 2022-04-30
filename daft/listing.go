@@ -3,6 +3,9 @@ package daft
 import (
 	"encoding/json"
 	"io/ioutil"
+	"regexp"
+	"strconv"
+	"strings"
 )
 
 const (
@@ -96,4 +99,37 @@ func (cl *Client) GetListings(options ListingsRequest) Listings {
 	}
 	json.Unmarshal(body, &listings)
 	return listings
+}
+
+func (listing *Listing) GetPriceAndCadence() (int, string) {
+	price := 0
+	cadence := "Price On Application"
+	if listing.Price != "Price on Applicaton" {
+		priceString := strings.ReplaceAll(listing.Price, "€", "")
+		priceString = strings.ToLower(strings.ReplaceAll(priceString, ",", ""))
+		price, _ = getIntFromString(priceString)
+		if strings.Contains(priceString, "week") {
+			cadence = "weekly"
+		} else if strings.Contains(priceString, "month") {
+			cadence = "monthly"
+		} else {
+			cadence = "onetime"
+		}
+	}
+	return price, cadence
+}
+
+func (listing *Listing) GetBedCount() int {
+	beds, _ := getIntFromString(listing.NumBedrooms)
+	return beds
+}
+
+func (listing *Listing) GetBathCount() int {
+	baths, _ := getIntFromString(listing.NumBathrooms)
+	return baths
+}
+
+func getIntFromString(target string) (int, error) {
+	match := regexp.MustCompile(`\d+`).FindString(target)
+	return strconv.Atoi(match)
 }
