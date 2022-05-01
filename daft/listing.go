@@ -119,13 +119,17 @@ func (cl *Client) GetListingData(path string) ListingData {
 	if err != nil {
 		panic(`not a valid XPath expression.`)
 	}
-	listingData.Location = location[0].Data
+	if len(location) > 0 {
+		listingData.Location = location[0].Data
+	}
 
 	description, err := htmlquery.QueryAll(doc, ".//div[@data-testid='description']/text()")
 	if err != nil {
 		panic(`not a valid XPath expression.`)
 	}
-	listingData.Description = description[0].Data
+	if len(description) > 0 {
+		listingData.Description = description[0].Data
+	}
 
 	features, err := htmlquery.QueryAll(doc, ".//*[@data-testid='features']/ul/li/text()")
 	if err != nil {
