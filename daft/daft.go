@@ -7,6 +7,7 @@ import (
 
 const (
 	DEFAULT_GATEWAY_URL = "https://search-gateway.dsch.ie/v1"
+	DAFT_URL            = "https://www.daft.ie"
 )
 
 var DEFAULT_HEADERS = http.Header{

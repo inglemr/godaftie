@@ -2,10 +2,14 @@ package daft
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
+	"log"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/antchfx/htmlquery"
 )
 
 const (
@@ -80,6 +84,57 @@ type ListingsRequest struct {
 	Paging    PagingFilter `json:"paging"`
 	GeoFilter GeoFilter    `json:"geoFilter"`
 	Terms     string       `json:"terms"`
+}
+
+//There is no easy way to collect data from the daft.ie internal api and the
+//webpage itself. This method attempts to collect some additional data about
+//the listing via web scrapping
+//Thus an additional data structure is used to return this data
+type ListingData struct {
+	Facilities  []string
+	Features    []string
+	Description string
+	Location    string
+}
+
+func (cl *Client) GetListingData(path string) ListingData {
+	///.//*[@data-testid='description']
+	///.//*[@data-testid='location']
+	listingData := ListingData{}
+	doc, err := htmlquery.LoadURL(DAFT_URL + path)
+	if err != nil {
+		fmt.Printf("Error requesting %v got %v\n", path, err)
+		log.Fatal(err)
+	}
+	facilities, err := htmlquery.QueryAll(doc, ".//*[@data-testid='facilities']/ul/li/text()")
+	if err != nil {
+		panic(`not a valid XPath expression.`)
+	}
+
+	for _, n := range facilities {
+		listingData.Facilities = append(listingData.Facilities, n.Data)
+	}
+
+	location, err := htmlquery.QueryAll(doc, ".//div[@data-testid='location-text']/text()")
+	if err != nil {
+		panic(`not a valid XPath expression.`)
+	}
+	listingData.Location = location[0].Data
+
+	description, err := htmlquery.QueryAll(doc, ".//div[@data-testid='description']/text()")
+	if err != nil {
+		panic(`not a valid XPath expression.`)
+	}
+	listingData.Description = description[0].Data
+
+	features, err := htmlquery.QueryAll(doc, ".//*[@data-testid='features']/ul/li/text()")
+	if err != nil {
+		panic(`not a valid XPath expression.`)
+	}
+	for _, n := range features {
+		listingData.Features = append(listingData.Features, n.Data)
+	}
+	return listingData
 }
 
 func (cl *Client) GetListings(options ListingsRequest) Listings {
