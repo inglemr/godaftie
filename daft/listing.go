@@ -97,7 +97,7 @@ type ListingData struct {
 	Location    string
 }
 
-func (cl *Client) GetListingData(path string) ListingData {
+func (cl *Client) GetListingData(path string) (ListingData, error) {
 	///.//*[@data-testid='description']
 	///.//*[@data-testid='location']
 	listingData := ListingData{}
@@ -105,10 +105,11 @@ func (cl *Client) GetListingData(path string) ListingData {
 	if err != nil {
 		fmt.Printf("Error requesting %v got %v\n", path, err)
 		log.Fatal(err)
+		return listingData, err
 	}
 	facilities, err := htmlquery.QueryAll(doc, ".//*[@data-testid='facilities']/ul/li/text()")
 	if err != nil {
-		panic(`not a valid XPath expression.`)
+		return listingData, err
 	}
 
 	for _, n := range facilities {
@@ -117,7 +118,7 @@ func (cl *Client) GetListingData(path string) ListingData {
 
 	location, err := htmlquery.QueryAll(doc, ".//div[@data-testid='location-text']/text()")
 	if err != nil {
-		panic(`not a valid XPath expression.`)
+		return listingData, err
 	}
 	if len(location) > 0 {
 		listingData.Location = location[0].Data
@@ -125,7 +126,7 @@ func (cl *Client) GetListingData(path string) ListingData {
 
 	description, err := htmlquery.QueryAll(doc, ".//div[@data-testid='description']/text()")
 	if err != nil {
-		panic(`not a valid XPath expression.`)
+		return listingData, err
 	}
 	if len(description) > 0 {
 		listingData.Description = description[0].Data
@@ -133,31 +134,31 @@ func (cl *Client) GetListingData(path string) ListingData {
 
 	features, err := htmlquery.QueryAll(doc, ".//*[@data-testid='features']/ul/li/text()")
 	if err != nil {
-		panic(`not a valid XPath expression.`)
+		return listingData, err
 	}
 	for _, n := range features {
 		listingData.Features = append(listingData.Features, n.Data)
 	}
-	return listingData
+	return listingData, nil
 }
 
-func (cl *Client) GetListings(options ListingsRequest) Listings {
+func (cl *Client) GetListings(options ListingsRequest) (Listings, error) {
 	var listings Listings
 	b, er := json.Marshal(options)
 	if er != nil {
-		panic(er)
+		return listings, er
 	}
 	resp, err := cl.newRequest("POST", LISTINGS_PATH, b, nil)
 	if err != nil {
-		panic(err)
+		return listings, err
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		panic(err)
+		return listings, err
 	}
 	json.Unmarshal(body, &listings)
-	return listings
+	return listings, nil
 }
 
 func (listing *Listing) GetPriceAndCadence() (int, string) {
